@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getAllNotes, getNoteRaw, buildTree } from '@/lib/notes';
-import { renderMarkdown } from '@/lib/markdown';
+import { extractNoteHeadings, renderMarkdown } from '@/lib/markdown';
 import { PageShell } from '@/components/PageShell';
+import { TableOfContents } from '@/components/TableOfContents';
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -46,6 +47,7 @@ export default async function NotePage({ params }: Props) {
   const allNotes = getAllNotes();
   const tree = buildTree(allNotes);
   const html = await renderMarkdown(body, allNotes);
+  const headings = extractNoteHeadings(body);
 
   const related = allNotes.filter(n => n.id !== id && n.subject === meta.subject && n.unit === meta.unit);
   const subjectLabel = meta.subject.replace(/([A-Z])/g, ' $1').trim();
@@ -78,8 +80,11 @@ export default async function NotePage({ params }: Props) {
         )}
       </header>
 
-      {/* Note body */}
-      <article className="prose" dangerouslySetInnerHTML={{ __html: html }} />
+      {/* Note body + static table of contents */}
+      <div className="note-reading-layout">
+        <article className="prose" dangerouslySetInnerHTML={{ __html: html }} />
+        <TableOfContents headings={headings} />
+      </div>
 
       {/* Related notes */}
       {related.length > 0 && (

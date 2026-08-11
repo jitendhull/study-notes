@@ -10,13 +10,16 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ q?: string; subject?: string; tag?: string }>;
+  searchParams: Promise<{ q?: string; subject?: string; unit?: string; tag?: string; difficulty?: string }>;
 }
 
 export default async function SearchPage({ searchParams }: Props) {
   const sp = await searchParams;
   const initialQ = sp.q ?? sp.tag ?? '';
   const initialSubject = sp.subject ?? '';
+  const initialUnit = sp.unit ?? '';
+  const initialTag = sp.tag ?? '';
+  const initialDifficulty = sp.difficulty ?? '';
 
   const notes = getAllNotes();
   const tree = buildTree(notes);
@@ -32,7 +35,12 @@ export default async function SearchPage({ searchParams }: Props) {
       <SearchClient
         initialQ={initialQ}
         initialSubject={initialSubject}
+        initialUnit={initialUnit}
+        initialTag={initialTag}
+        initialDifficulty={initialDifficulty}
         subjects={meta.subjects.filter(s => s !== 'General')}
+        units={meta.units}
+        tags={meta.tags}
       />
     </PageShell>
   );

@@ -5,6 +5,8 @@
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MobileMenuToggle } from '@/components/MobileMenuToggle';
+import { CommandPalette } from '@/components/CommandPalette';
+import { BookOpen, LibraryBig } from 'lucide-react';
 import type { NoteTree } from '@/types';
 
 // ── Sidebar tree (pure server) ────────────────────────────────
@@ -57,6 +59,10 @@ function SidebarNav({ tree, currentId }: { tree: NoteTree; currentId?: string })
   const semesters = Object.keys(tree).sort().reverse();
   return (
     <nav aria-label="Note navigation" className="sidebar-nav">
+      <div className="sidebar-quick-links">
+        <Link href="/library" className="sidebar-quick-link"><LibraryBig size={16} aria-hidden="true" /> All notes</Link>
+        <Link href="/search" className="sidebar-quick-link">Advanced search</Link>
+      </div>
       {semesters.map(sem => (
         <div key={sem} className="nav-semester">
           <div className="nav-semester-label">{sem}</div>
@@ -76,20 +82,13 @@ function SidebarNav({ tree, currentId }: { tree: NoteTree; currentId?: string })
 
 // ── Header (server shell + client islands) ────────────────────
 
-function HeaderBar({ searchAction }: { searchAction?: string }) {
+function HeaderBar() {
   return (
     <header className="header">
       <MobileMenuToggle />
-      <Link href="/" className="header-logo">📚 Study Notes</Link>
-      <form action="/search" method="get" className="header-search-form" role="search">
-        <input
-          type="search"
-          name="q"
-          placeholder="Search notes…"
-          aria-label="Search notes"
-          className="header-search-input"
-        />
-      </form>
+      <Link href="/" className="header-logo"><BookOpen size={18} aria-hidden="true" /><span>Study Notes</span></Link>
+      <Link href="/library" className="header-library-link"><LibraryBig size={16} aria-hidden="true" /><span>Browse</span></Link>
+      <CommandPalette />
       <ThemeToggle />
     </header>
   );

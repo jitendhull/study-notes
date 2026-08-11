@@ -10,8 +10,10 @@ import remarkWikiLink from 'remark-wiki-link';
 import remarkRehype from 'remark-rehype';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeSlug from 'rehype-slug';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
+import GithubSlugger from 'github-slugger';
 import type { NoteMeta } from '@/types';
 
 // KaTeX + highlight.js class/style attrs must survive sanitize
@@ -19,7 +21,7 @@ const sanitizeSchema = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
-    '*': [...(defaultSchema.attributes?.['*'] ?? []), 'className', 'style', 'aria-hidden'],
+    '*': [...(defaultSchema.attributes?.['*'] ?? []), 'className', 'style', 'aria-hidden', 'id'],
     span: [...(defaultSchema.attributes?.['span'] ?? []), 'className', 'style'],
     div: [...(defaultSchema.attributes?.['div'] ?? []), 'className', 'style'],
   },
@@ -51,6 +53,7 @@ function buildProcessor(allNotes: NoteMeta[]): any {
     .use(remarkRehype, { allowDangerousHtml: false })
     .use(rehypeKatex)
     .use(rehypeHighlight)
+    .use(rehypeSlug)
     .use(rehypeSanitize, sanitizeSchema as Parameters<typeof rehypeSanitize>[0])
     .use(rehypeStringify);
 }
@@ -62,6 +65,36 @@ function getProcessor(allNotes: NoteMeta[]): any {
     _cachedProcessor = buildProcessor(allNotes);
   }
   return _cachedProcessor;
+}
+
+export interface NoteHeading {
+  id: string;
+  text: string;
+  depth: 2 | 3;
+}
+
+function headingText(value: string): string {
+  return value
+    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2')
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/[`*_~]/g, '')
+    .replace(/\$+([^$]+)\$+/g, '$1')
+    .trim();
+}
+
+export function extractNoteHeadings(body: string): NoteHeading[] {
+  const slugger = new GithubSlugger();
+  const headings: NoteHeading[] = [];
+  const pattern = /^(#{2,3})\s+(.+?)\s*#*\s*$/gm;
+
+  for (const match of body.matchAll(pattern)) {
+    const text = headingText(match[2]);
+    if (!text) continue;
+    headings.push({ id: slugger.slug(text), text, depth: match[1].length as 2 | 3 });
+  }
+
+  return headings;
 }
 
 export async function renderMarkdown(body: string, allNotes: NoteMeta[]): Promise<string> {

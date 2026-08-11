@@ -1,87 +1,65 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import Link from 'next/link';
-import type { SearchDoc } from '@/lib/search';
-import { makeSnippet } from '@/lib/search';
 
-interface SearchResult {
-  id: string; title: string; subject: string;
-  unit: string; difficulty: string; snippet: string;
-}
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { searchNotes, type IndexedSearchResult, type SearchFilters } from '@/lib/search-client';
 
 interface Props {
   initialQ: string;
-  initialSubject: string;
+  initialSubject?: string;
+  initialUnit?: string;
+  initialTag?: string;
+  initialDifficulty?: string;
   subjects: string[];
+  units: string[];
+  tags: string[];
 }
 
-// Module-level index cache — persists across re-renders and page navigations
-// (Next.js App Router keeps client modules in memory during session).
-let _indexCache: {
-  search: (q: string, opts: object) => Array<{ result: string[] }>;
-  docs: Map<string, SearchDoc>;
-} | null = null;
-let _indexLoading: Promise<void> | null = null;
+const DIFFICULTIES = ['easy', 'intermediate', 'hard'];
 
-async function loadIndex(): Promise<void> {
-  if (_indexCache) return;
-  if (_indexLoading) return _indexLoading;
-
-  _indexLoading = (async () => {
-    try {
-      const [{ Document }, res] = await Promise.all([
-        import('flexsearch'),
-        fetch('/search-index.json'),
-      ]);
-      if (!res.ok) throw new Error(`Search index failed to load (${res.status})`);
-
-      const docs: SearchDoc[] = await res.json();
-      const idx = new Document({
-        document: { id: 'id', index: ['title', 'subject', 'unit', 'tags', 'body'] },
-        tokenize: 'forward',
-      });
-      const docMap = new Map<string, SearchDoc>();
-      for (const doc of docs) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        idx.add(doc as any);
-        docMap.set(doc.id, doc);
-      }
-      _indexCache = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        search: idx.search.bind(idx) as any,
-        docs: docMap,
-      };
-    } finally {
-      _indexLoading = null;
-    }
-  })();
-
-  return _indexLoading;
+function formatLabel(value: string) {
+  return value.replace(/([A-Z])/g, ' $1').trim();
 }
 
-export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
+function activeFilterLabel(filters: SearchFilters) {
+  return [filters.subject, filters.unit, filters.tag ? `#${filters.tag}` : '', filters.difficulty]
+    .filter(Boolean)
+    .map(value => formatLabel(value!))
+    .join(' · ');
+}
+
+export function SearchClient({
+  initialQ,
+  initialSubject = '',
+  initialUnit = '',
+  initialTag = '',
+  initialDifficulty = '',
+  subjects,
+  units,
+  tags,
+}: Props) {
   const [q, setQ] = useState(initialQ);
-  const [subject, setSubject] = useState(initialSubject);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [filters, setFilters] = useState<SearchFilters>({
+    subject: initialSubject,
+    unit: initialUnit,
+    tag: initialTag,
+    difficulty: initialDifficulty,
+  });
+  const [results, setResults] = useState<IndexedSearchResult[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const doSearch = useCallback(async (query: string, subj: string) => {
-    if (!query.trim()) { setResults([]); setStatus('idle'); return; }
+  const doSearch = useCallback(async (query: string, activeFilters: SearchFilters) => {
+    if (!query.trim()) {
+      setResults([]);
+      setStatus('idle');
+      return;
+    }
+
     setStatus('loading');
     try {
-      await loadIndex();
-      const idx = _indexCache!;
-      const hits = idx.search(query, { limit: 30, enrich: false });
-      const seen = new Set<string>();
-      hits.forEach((h: { result: string[] }) => h.result.forEach(id => seen.add(id)));
-      let found = [...seen].map(id => idx.docs.get(id)).filter((d): d is SearchDoc => !!d);
-      if (subj) found = found.filter(d => d.subject === subj);
-      setResults(found.map(d => ({
-        id: d.id, title: d.title, subject: d.subject,
-        unit: d.unit, difficulty: d.difficulty,
-        snippet: makeSnippet(d.body, query),
-      })));
+      const found = await searchNotes(query, activeFilters);
+      setResults(found);
       setStatus('done');
     } catch (error) {
       console.error('Unable to load the search index', error);
@@ -92,75 +70,90 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(q, subject), 250);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [q, subject, doSearch]);
+    debounceRef.current = setTimeout(() => doSearch(q, filters), 220);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [q, filters, doSearch]);
 
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set('q', q);
-    if (subject) params.set('subject', subject);
+    if (filters.subject) params.set('subject', filters.subject);
+    if (filters.unit) params.set('unit', filters.unit);
+    if (filters.tag) params.set('tag', filters.tag);
+    if (filters.difficulty) params.set('difficulty', filters.difficulty);
     window.history.replaceState({}, '', params.size ? `/search?${params}` : '/search');
-  }, [q, subject]);
+  }, [q, filters]);
+
+  function setFilter<K extends keyof SearchFilters>(key: K, value: string) {
+    setFilters(current => ({ ...current, [key]: value }));
+  }
+
+  const scope = activeFilterLabel(filters);
 
   return (
-    <div>
+    <div className="search-experience">
       <div className="search-controls">
         <input
           type="search"
           value={q}
-          onChange={e => setQ(e.target.value)}
-          placeholder="Search notes…"
+          onChange={event => setQ(event.target.value)}
+          placeholder="Search a concept, topic, or tag…"
           autoFocus
           aria-label="Search query"
           className="search-input"
         />
-        <select
-          value={subject}
-          onChange={e => setSubject(e.target.value)}
-          aria-label="Filter by subject"
-          className="search-select"
-        >
+      </div>
+
+      <div className="search-filter-row" aria-label="Search filters">
+        <select value={filters.subject ?? ''} onChange={event => setFilter('subject', event.target.value)} aria-label="Filter by subject" className="search-filter-select">
           <option value="">All subjects</option>
-          {subjects.map(s => (
-            <option key={s} value={s}>{s.replace(/([A-Z])/g, ' $1').trim()}</option>
-          ))}
+          {subjects.map(subject => <option key={subject} value={subject}>{formatLabel(subject)}</option>)}
+        </select>
+        <select value={filters.unit ?? ''} onChange={event => setFilter('unit', event.target.value)} aria-label="Filter by unit" className="search-filter-select">
+          <option value="">All units</option>
+          {units.map(unit => <option key={unit} value={unit}>{unit}</option>)}
+        </select>
+        <select value={filters.tag ?? ''} onChange={event => setFilter('tag', event.target.value)} aria-label="Filter by tag" className="search-filter-select">
+          <option value="">All tags</option>
+          {tags.map(tag => <option key={tag} value={tag}>#{tag}</option>)}
+        </select>
+        <select value={filters.difficulty ?? ''} onChange={event => setFilter('difficulty', event.target.value)} aria-label="Filter by difficulty" className="search-filter-select">
+          <option value="">All levels</option>
+          {DIFFICULTIES.map(difficulty => <option key={difficulty} value={difficulty}>{formatLabel(difficulty)}</option>)}
         </select>
       </div>
 
-      {/* Loading skeleton */}
       {status === 'loading' && (
-        <div className="search-results">
-          {[0,1,2].map(i => <div key={i} className="skeleton" />)}
+        <div className="search-results" aria-label="Loading results">
+          {[0, 1, 2].map(index => <div key={index} className="skeleton" />)}
         </div>
       )}
 
       {status === 'done' && q && (
         <p className="search-summary" role="status">
-          {results.length} {results.length === 1 ? 'result' : 'results'} for <strong>“{q}”</strong>{subject ? ` in ${subject.replace(/([A-Z])/g, ' $1').trim()}` : ''}
+          {results.length} {results.length === 1 ? 'result' : 'results'} for <strong>“{q}”</strong>{scope ? ` in ${scope}` : ''}
         </p>
       )}
 
-      {/* Results */}
       {status === 'done' && results.length > 0 && (
         <div className="search-results" role="list" aria-live="polite">
-          {results.map(r => (
-            <Link key={r.id} href={`/note/${r.id}`} className="result-card" role="listitem">
+          {results.map(result => (
+            <Link key={result.id} href={`/note/${result.id}`} className="result-card" role="listitem">
               <div className="result-title-row">
-                <span className="result-title">{r.title}</span>
-                <span className={`badge badge-${r.difficulty}`}>{r.difficulty}</span>
+                <span className="result-title">{result.title}</span>
+                <span className={`badge badge-${result.difficulty}`}>{result.difficulty}</span>
               </div>
-              <div className="result-meta">
-                {r.subject.replace(/([A-Z])/g, ' $1').trim()} › {r.unit}
-              </div>
-              <div className="result-snippet">{r.snippet}</div>
+              <div className="result-meta">{formatLabel(result.subject)} <span aria-hidden="true">›</span> {result.unit}</div>
+              <div className="result-snippet">{result.snippet}</div>
             </Link>
           ))}
         </div>
       )}
 
       {status === 'done' && q && results.length === 0 && (
-        <p className="search-empty">Try a broader term or select another subject.</p>
+        <p className="search-empty">Try a broader term or remove one of the filters.</p>
       )}
 
       {status === 'error' && (
@@ -168,7 +161,7 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
       )}
 
       {status === 'idle' && (
-        <p className="search-hint">Type to search across all notes…</p>
+        <p className="search-hint">Use filters to narrow results, or press <kbd>⌘</kbd> <kbd>K</kbd> from anywhere to search.</p>
       )}
     </div>
   );
