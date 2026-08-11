@@ -6,7 +6,6 @@ import { UMAMI_SRC, UMAMI_WEBSITE_ID } from '@/lib/analytics';
 export const metadata: Metadata = {
   title: { default: 'Study Notes — MDU BCA', template: '%s | Study Notes' },
   description: 'BCA Semester I study notes — Mathematics, Problem Solving, Computer Architecture, and more.',
-  metadataBase: new URL(process.env.SITE_URL ?? 'https://notes.jitendhull.tech'),
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
