@@ -1,0 +1,5 @@
+.next/
+node_modules/
+.env.local
+.env
+public/search-index.json
