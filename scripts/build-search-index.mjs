@@ -51,5 +51,6 @@ for (const full of files) {
   });
 }
 
+fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(docs), 'utf-8');
 console.log(`✅ Search index: ${docs.length} notes → public/search-index.json (${(fs.statSync(OUT).size / 1024).toFixed(1)}KB)`);
