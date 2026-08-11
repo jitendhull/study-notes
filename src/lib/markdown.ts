@@ -32,10 +32,19 @@ let _cachedKey = '';
 let _cachedProcessor: any = null;
 
 function buildProcessor(allNotes: NoteMeta[]): any {
-  // basename → full id  (for wikilink resolution)
+  // Basenames and human-readable titles resolve to canonical note IDs.
   const byBasename = new Map<string, string>();
+  const byNormalizedTitle = new Map<string, string>();
+  const normalize = (value: string) => value
+    .trim()
+    .toLowerCase()
+    .replace(/^back to\s+/, '')
+    .replace(/^master\s+/, '')
+    .replace(/\s+/g, ' ');
+
   for (const n of allNotes) {
     byBasename.set(n.id.split('/').pop()!, n.id);
+    byNormalizedTitle.set(normalize(n.title), n.id);
   }
 
   return unified()
@@ -44,7 +53,7 @@ function buildProcessor(allNotes: NoteMeta[]): any {
     .use(remarkMath)
     .use(remarkWikiLink, {
       hrefTemplate: (name: string) => {
-        const found = byBasename.get(name);
+        const found = byBasename.get(name) ?? byNormalizedTitle.get(normalize(name));
         return found ? `/note/${found}` : `/note/${name}`;
       },
       pageResolver: (name: string) => [name],
