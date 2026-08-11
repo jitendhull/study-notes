@@ -5,8 +5,8 @@ import type { SearchDoc } from '@/lib/search';
 import { makeSnippet } from '@/lib/search';
 
 interface SearchResult {
-  id: string; title: string; subject: string; unit: string;
-  difficulty: string; snippet: string;
+  id: string; title: string; subject: string;
+  unit: string; difficulty: string; snippet: string;
 }
 
 interface Props {
@@ -15,26 +15,24 @@ interface Props {
   subjects: string[];
 }
 
-export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
-  const [q, setQ] = useState(initialQ);
-  const [subject, setSubject] = useState(initialSubject);
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const indexRef = useRef<{
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    search: (q: string, opts?: object) => any[];
-    docs: Map<string, SearchDoc>;
-  } | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+// Module-level index cache — persists across re-renders and page navigations
+// (Next.js App Router keeps client modules in memory during session).
+let _indexCache: {
+  search: (q: string, opts: object) => Array<{ result: string[] }>;
+  docs: Map<string, SearchDoc>;
+} | null = null;
+let _indexLoading: Promise<void> | null = null;
 
-  // Lazy-load FlexSearch index on first search
-  async function loadIndex() {
-    if (indexRef.current) return;
-    const [{ Document }, docsResp] = await Promise.all([
+async function loadIndex(): Promise<void> {
+  if (_indexCache) return;
+  if (_indexLoading) return _indexLoading;
+
+  _indexLoading = (async () => {
+    const [{ Document }, res] = await Promise.all([
       import('flexsearch'),
       fetch('/search-index.json'),
     ]);
-    const docs: SearchDoc[] = await docsResp.json();
+    const docs: SearchDoc[] = await res.json();
     const idx = new Document({
       document: { id: 'id', index: ['title', 'subject', 'unit', 'tags', 'body'] },
       tokenize: 'forward',
@@ -45,48 +43,58 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
       idx.add(doc as any);
       docMap.set(doc.id, doc);
     }
-    indexRef.current = { search: idx.search.bind(idx), docs: docMap };
-  }
+    _indexCache = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      search: idx.search.bind(idx) as any,
+      docs: docMap,
+    };
+    _indexLoading = null;
+  })();
+
+  return _indexLoading;
+}
+
+export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
+  const [q, setQ] = useState(initialQ);
+  const [subject, setSubject] = useState(initialSubject);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done'>('idle');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const doSearch = useCallback(async (query: string, subj: string) => {
-    if (!query.trim()) { setResults([]); return; }
-    setLoading(true);
+    if (!query.trim()) { setResults([]); setStatus('idle'); return; }
+    setStatus('loading');
     await loadIndex();
-    const idx = indexRef.current!;
+    const idx = _indexCache!;
     const hits = idx.search(query, { limit: 30, enrich: false });
-    const ids = new Set<string>();
-    hits.forEach((h: { result: string[] }) => h.result.forEach((id: string) => ids.add(id)));
-    let found = [...ids]
-      .map(id => idx.docs.get(id))
-      .filter((d): d is SearchDoc => !!d);
+    const seen = new Set<string>();
+    hits.forEach((h: { result: string[] }) => h.result.forEach(id => seen.add(id)));
+    let found = [...seen].map(id => idx.docs.get(id)).filter((d): d is SearchDoc => !!d);
     if (subj) found = found.filter(d => d.subject === subj);
     setResults(found.map(d => ({
       id: d.id, title: d.title, subject: d.subject,
       unit: d.unit, difficulty: d.difficulty,
       snippet: makeSnippet(d.body, query),
     })));
-    setLoading(false);
+    setStatus('done');
   }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(q, subject), 300);
+    debounceRef.current = setTimeout(() => doSearch(q, subject), 250);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [q, subject, doSearch]);
 
-  // Sync URL
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (subject) params.set('subject', subject);
-    const url = params.toString() ? `/search?${params}` : '/search';
-    window.history.replaceState({}, '', url);
+    window.history.replaceState({}, '', params.size ? `/search?${params}` : '/search');
   }, [q, subject]);
 
   return (
     <div>
-      {/* Search controls */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+      <div className="search-controls">
         <input
           type="search"
           value={q}
@@ -94,22 +102,13 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
           placeholder="Search notes…"
           autoFocus
           aria-label="Search query"
-          style={{
-            flex: 1, minWidth: 200, padding: '8px 12px',
-            border: '1px solid var(--border-strong)', borderRadius: 'var(--radius)',
-            background: 'var(--bg-secondary)', color: 'var(--text-primary)',
-            fontSize: '1rem',
-          }}
+          className="search-input"
         />
         <select
           value={subject}
           onChange={e => setSubject(e.target.value)}
           aria-label="Filter by subject"
-          style={{
-            padding: '8px 12px', border: '1px solid var(--border-strong)',
-            borderRadius: 'var(--radius)', background: 'var(--bg-secondary)',
-            color: 'var(--text-primary)', fontSize: '0.9rem',
-          }}
+          className="search-select"
         >
           <option value="">All subjects</option>
           {subjects.map(s => (
@@ -118,41 +117,37 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
         </select>
       </div>
 
-      {/* Results */}
-      {loading && <p style={{ color: 'var(--text-secondary)' }}>Searching…</p>}
-      {!loading && q && results.length === 0 && (
-        <p style={{ color: 'var(--text-secondary)' }}>No results for "{q}"</p>
+      {/* Loading skeleton */}
+      {status === 'loading' && (
+        <div className="search-results">
+          {[0,1,2].map(i => <div key={i} className="skeleton" />)}
+        </div>
       )}
-      {results.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+      {/* Results */}
+      {status === 'done' && results.length > 0 && (
+        <div className="search-results" role="list" aria-live="polite">
           {results.map(r => (
-            <Link
-              key={r.id}
-              href={`/note/${r.id}`}
-              style={{
-                display: 'block', padding: '12px 16px',
-                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                borderRadius: 'var(--radius)', color: 'var(--text-primary)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{r.title}</span>
+            <Link key={r.id} href={`/note/${r.id}`} className="result-card" role="listitem">
+              <div className="result-title-row">
+                <span className="result-title">{r.title}</span>
                 <span className={`badge badge-${r.difficulty}`}>{r.difficulty}</span>
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+              <div className="result-meta">
                 {r.subject.replace(/([A-Z])/g, ' $1').trim()} › {r.unit}
               </div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                {r.snippet}
-              </div>
+              <div className="result-snippet">{r.snippet}</div>
             </Link>
           ))}
         </div>
       )}
-      {!q && !loading && (
-        <p style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
-          Type to search across all notes…
-        </p>
+
+      {status === 'done' && q && results.length === 0 && (
+        <p className="search-empty">No results for "{q}"</p>
+      )}
+
+      {status === 'idle' && (
+        <p className="search-hint">Type to search across all notes…</p>
       )}
     </div>
   );

@@ -1,5 +1,7 @@
-// Note parser: walks content/ vault, parses frontmatter, builds NoteMeta[]
-// Runs at build time (SSG) and in webhook handler. Never in browser.
+// Note parser — single-parse, module-level cache.
+// getAllNotes() walks + parses the vault ONCE per process.
+// All derived structures (tree, meta, id→body map) computed once from that.
+// Safe for SSG: Next.js builds are single-process, cache never goes stale mid-build.
 
 import fs from 'fs';
 import path from 'path';
@@ -8,83 +10,87 @@ import type { NoteMeta, NoteTree, SiteMetadata } from '@/types';
 
 const CONTENT_DIR = path.join(process.cwd(), 'content', '2026-Sem-1');
 
-// filepath → URL-safe id: "Mathematics/SetTheory/01-Set.md" → "Mathematics/SetTheory/01-Set"
+// Module-level cache — parsed once per build process.
+let _notes: NoteMeta[] | null = null;
+let _bodies: Map<string, string> | null = null; // id → raw markdown body
+
 function toId(relPath: string): string {
   return relPath.replace(/\.md$/, '');
 }
 
-function walkDir(dir: string, results: string[] = []): string[] {
+function walkDir(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) walkDir(full, results);
-    else if (entry.name.endsWith('.md')) results.push(full);
+    if (entry.isDirectory()) walkDir(full, out);
+    else if (entry.name.endsWith('.md')) out.push(full);
   }
-  return results;
+  return out;
 }
 
-export function getAllNotes(): NoteMeta[] {
-  const files = walkDir(CONTENT_DIR);
-  const notes: NoteMeta[] = [];
-
-  for (const full of files) {
-    const relPath = path.relative(CONTENT_DIR, full);
-    const raw = fs.readFileSync(full, 'utf-8');
-    const { data, content: body } = matter(raw);
-
-    notes.push({
-      id: toId(relPath),
-      title: data.title || path.basename(relPath, '.md'),
-      subject: data.subject || 'General',
-      semester: data.semester || '2026-Sem-1',
-      unit: data.unit || 'Notes',
-      tags: Array.isArray(data.tags) ? data.tags : [],
-      difficulty: data.difficulty || 'intermediate',
-      dateCreated: data.dateCreated ? String(data.dateCreated) : '',
-      dateUpdated: data.dateUpdated ? String(data.dateUpdated) : '',
-      wordCount: body.split(/\s+/).filter(Boolean).length,
-      filePath: relPath,
-    });
-  }
-
-  return notes;
-}
-
-export function getNoteRaw(id: string): { meta: NoteMeta; body: string } | null {
-  const full = path.join(CONTENT_DIR, id + '.md');
-  if (!fs.existsSync(full)) return null;
-  const raw = fs.readFileSync(full, 'utf-8');
-  const { data, content: body } = matter(raw);
-  const relPath = id + '.md';
-
-  const meta: NoteMeta = {
+function parseMeta(data: Record<string, unknown>, id: string, body: string): NoteMeta {
+  return {
     id,
-    title: data.title || path.basename(id),
-    subject: data.subject || 'General',
-    semester: data.semester || '2026-Sem-1',
-    unit: data.unit || 'Notes',
-    tags: Array.isArray(data.tags) ? data.tags : [],
-    difficulty: data.difficulty || 'intermediate',
+    title: String(data.title ?? path.basename(id)),
+    subject: String(data.subject ?? 'General'),
+    semester: String(data.semester ?? '2026-Sem-1'),
+    unit: String(data.unit ?? 'Notes'),
+    tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
+    difficulty: (data.difficulty as NoteMeta['difficulty']) ?? 'intermediate',
     dateCreated: data.dateCreated ? String(data.dateCreated) : '',
     dateUpdated: data.dateUpdated ? String(data.dateUpdated) : '',
     wordCount: body.split(/\s+/).filter(Boolean).length,
-    filePath: relPath,
+    filePath: id + '.md',
   };
+}
 
+// Single walk, single parse, fills both caches.
+function hydrate(): void {
+  if (_notes) return;
+  const files = walkDir(CONTENT_DIR);
+  const notes: NoteMeta[] = [];
+  const bodies = new Map<string, string>();
+
+  for (const full of files) {
+    const relPath = path.relative(CONTENT_DIR, full);
+    const id = toId(relPath);
+    const raw = fs.readFileSync(full, 'utf-8');
+    const { data, content: body } = matter(raw);
+    notes.push(parseMeta(data as Record<string, unknown>, id, body));
+    bodies.set(id, body);
+  }
+
+  _notes = notes;
+  _bodies = bodies;
+}
+
+export function getAllNotes(): NoteMeta[] {
+  hydrate();
+  return _notes!;
+}
+
+// Returns meta + body from cache — no fs read after first hydrate().
+export function getNoteRaw(id: string): { meta: NoteMeta; body: string } | null {
+  hydrate();
+  const meta = _notes!.find(n => n.id === id);
+  if (!meta) return null;
+  const body = _bodies!.get(id) ?? '';
   return { meta, body };
+}
+
+// Expose bodies map for search index builder
+export function getAllBodies(): Map<string, string> {
+  hydrate();
+  return _bodies!;
 }
 
 export function buildTree(notes: NoteMeta[]): NoteTree {
   const tree: NoteTree = {};
   for (const n of notes) {
-    const sem = n.semester;
-    const subj = n.subject;
-    const unit = n.unit;
-    tree[sem] ??= {};
-    tree[sem][subj] ??= {};
-    tree[sem][subj][unit] ??= [];
-    tree[sem][subj][unit].push(n);
+    tree[n.semester] ??= {};
+    tree[n.semester][n.subject] ??= {};
+    tree[n.semester][n.subject][n.unit] ??= [];
+    tree[n.semester][n.subject][n.unit].push(n);
   }
-  // sort notes within each unit by id (filename order = numeric prefix order)
   for (const sem of Object.values(tree))
     for (const subj of Object.values(sem))
       for (const unit of Object.values(subj))
@@ -102,9 +108,6 @@ export function buildSiteMetadata(notes: NoteMeta[]): SiteMetadata {
     semesters,
     tags,
     units,
-    stats: {
-      totalNotes: notes.length,
-      lastUpdated: new Date().toISOString(),
-    },
+    stats: { totalNotes: notes.length, lastUpdated: new Date().toISOString() },
   };
 }

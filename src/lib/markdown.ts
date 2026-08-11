@@ -1,6 +1,6 @@
-// Markdown → HTML pipeline
-// unified + remark + rehype, server-side only.
-// Handles: GFM tables/strikethrough, KaTeX math ($...$, $$...$$), wikilinks, syntax highlight, sanitize.
+// Markdown → HTML pipeline. Server-side only.
+// Processor is memoized per unique note set (same IDs = same instance).
+// Handles: GFM, KaTeX math, wikilinks, syntax highlight, sanitize XSS.
 
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
@@ -14,7 +14,7 @@ import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeStringify from 'rehype-stringify';
 import type { NoteMeta } from '@/types';
 
-// Allow KaTeX-generated class/style attributes through sanitize
+// KaTeX + highlight.js class/style attrs must survive sanitize
 const sanitizeSchema = {
   ...defaultSchema,
   attributes: {
@@ -25,28 +25,26 @@ const sanitizeSchema = {
   },
 };
 
-// wikilink [[01-Set]] → /note/Mathematics/SetTheory/01-Set
-// We resolve by searching allNotes for matching id basename
-function makeWikilinkResolver(allNotes: NoteMeta[]) {
-  // basename → full id map (last segment of id)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _cachedKey = '';
+let _cachedProcessor: any = null;
+
+function buildProcessor(allNotes: NoteMeta[]): any {
+  // basename → full id  (for wikilink resolution)
   const byBasename = new Map<string, string>();
   for (const n of allNotes) {
-    const base = n.id.split('/').pop()!;
-    byBasename.set(base, n.id);
+    byBasename.set(n.id.split('/').pop()!, n.id);
   }
-  return (name: string) => {
-    const found = byBasename.get(name);
-    return found ? `/note/${found}` : `/note/${name}`;
-  };
-}
 
-const processor = (allNotes: NoteMeta[]) =>
-  unified()
+  return unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkMath)
     .use(remarkWikiLink, {
-      hrefTemplate: makeWikilinkResolver(allNotes),
+      hrefTemplate: (name: string) => {
+        const found = byBasename.get(name);
+        return found ? `/note/${found}` : `/note/${name}`;
+      },
       pageResolver: (name: string) => [name],
       aliasDivider: '|',
     })
@@ -55,8 +53,18 @@ const processor = (allNotes: NoteMeta[]) =>
     .use(rehypeHighlight)
     .use(rehypeSanitize, sanitizeSchema as Parameters<typeof rehypeSanitize>[0])
     .use(rehypeStringify);
+}
+
+function getProcessor(allNotes: NoteMeta[]): any {
+  const key = allNotes.map(n => n.id).sort().join('|');
+  if (key !== _cachedKey || !_cachedProcessor) {
+    _cachedKey = key;
+    _cachedProcessor = buildProcessor(allNotes);
+  }
+  return _cachedProcessor;
+}
 
 export async function renderMarkdown(body: string, allNotes: NoteMeta[]): Promise<string> {
-  const result = await processor(allNotes).process(body);
+  const result = await getProcessor(allNotes).process(body);
   return String(result);
 }
