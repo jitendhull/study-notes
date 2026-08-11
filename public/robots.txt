@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /api/
-
-# Uses SITE_URL from environment (e.g. set SITE_URL=https://notes.jitendhull.tech)
-Sitemap: ${SITE_URL}/sitemap.xml

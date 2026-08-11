@@ -25,5 +25,4 @@
 
 # Env vars are loaded from .env locally and set in Netlify dashboard for deploys:
 # WEBHOOK_SECRET
-# SITE_URL
 # NEXT_PUBLIC_UMAMI_WEBSITE_ID
