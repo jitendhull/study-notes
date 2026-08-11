@@ -2,21 +2,14 @@ import Link from 'next/link';
 
 export default function NotFound() {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', minHeight: '60vh', gap: 12, textAlign: 'center',
-      padding: '2rem',
-    }}>
-      <div style={{ fontSize: '3rem', lineHeight: 1 }}>📭</div>
-      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-        Note not found
-      </h1>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: 320 }}>
-        This note doesn't exist or may have been moved.
-      </p>
-      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-        <Link href="/" className="tag-pill" style={{ fontSize: '0.875rem' }}>← Home</Link>
-        <Link href="/search" className="tag-pill" style={{ fontSize: '0.875rem' }}>Search notes</Link>
+    <div className="status-page">
+      <div className="status-icon" aria-hidden="true">📭</div>
+      <p className="page-eyebrow">Study notes</p>
+      <h1 className="status-title">Note not found</h1>
+      <p className="status-description">This note does not exist or may have been moved. Return home or search the study library.</p>
+      <div className="status-actions">
+        <Link href="/" className="status-link status-link-primary">Return home</Link>
+        <Link href="/search" className="status-link">Search notes</Link>
       </div>
     </div>
   );

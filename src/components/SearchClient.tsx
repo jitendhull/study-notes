@@ -28,27 +28,32 @@ async function loadIndex(): Promise<void> {
   if (_indexLoading) return _indexLoading;
 
   _indexLoading = (async () => {
-    const [{ Document }, res] = await Promise.all([
-      import('flexsearch'),
-      fetch('/search-index.json'),
-    ]);
-    const docs: SearchDoc[] = await res.json();
-    const idx = new Document({
-      document: { id: 'id', index: ['title', 'subject', 'unit', 'tags', 'body'] },
-      tokenize: 'forward',
-    });
-    const docMap = new Map<string, SearchDoc>();
-    for (const doc of docs) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      idx.add(doc as any);
-      docMap.set(doc.id, doc);
+    try {
+      const [{ Document }, res] = await Promise.all([
+        import('flexsearch'),
+        fetch('/search-index.json'),
+      ]);
+      if (!res.ok) throw new Error(`Search index failed to load (${res.status})`);
+
+      const docs: SearchDoc[] = await res.json();
+      const idx = new Document({
+        document: { id: 'id', index: ['title', 'subject', 'unit', 'tags', 'body'] },
+        tokenize: 'forward',
+      });
+      const docMap = new Map<string, SearchDoc>();
+      for (const doc of docs) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        idx.add(doc as any);
+        docMap.set(doc.id, doc);
+      }
+      _indexCache = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        search: idx.search.bind(idx) as any,
+        docs: docMap,
+      };
+    } finally {
+      _indexLoading = null;
     }
-    _indexCache = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      search: idx.search.bind(idx) as any,
-      docs: docMap,
-    };
-    _indexLoading = null;
   })();
 
   return _indexLoading;
@@ -58,25 +63,31 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
   const [q, setQ] = useState(initialQ);
   const [subject, setSubject] = useState(initialSubject);
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const doSearch = useCallback(async (query: string, subj: string) => {
     if (!query.trim()) { setResults([]); setStatus('idle'); return; }
     setStatus('loading');
-    await loadIndex();
-    const idx = _indexCache!;
-    const hits = idx.search(query, { limit: 30, enrich: false });
-    const seen = new Set<string>();
-    hits.forEach((h: { result: string[] }) => h.result.forEach(id => seen.add(id)));
-    let found = [...seen].map(id => idx.docs.get(id)).filter((d): d is SearchDoc => !!d);
-    if (subj) found = found.filter(d => d.subject === subj);
-    setResults(found.map(d => ({
-      id: d.id, title: d.title, subject: d.subject,
-      unit: d.unit, difficulty: d.difficulty,
-      snippet: makeSnippet(d.body, query),
-    })));
-    setStatus('done');
+    try {
+      await loadIndex();
+      const idx = _indexCache!;
+      const hits = idx.search(query, { limit: 30, enrich: false });
+      const seen = new Set<string>();
+      hits.forEach((h: { result: string[] }) => h.result.forEach(id => seen.add(id)));
+      let found = [...seen].map(id => idx.docs.get(id)).filter((d): d is SearchDoc => !!d);
+      if (subj) found = found.filter(d => d.subject === subj);
+      setResults(found.map(d => ({
+        id: d.id, title: d.title, subject: d.subject,
+        unit: d.unit, difficulty: d.difficulty,
+        snippet: makeSnippet(d.body, query),
+      })));
+      setStatus('done');
+    } catch (error) {
+      console.error('Unable to load the search index', error);
+      setResults([]);
+      setStatus('error');
+    }
   }, []);
 
   useEffect(() => {
@@ -124,6 +135,12 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
         </div>
       )}
 
+      {status === 'done' && q && (
+        <p className="search-summary" role="status">
+          {results.length} {results.length === 1 ? 'result' : 'results'} for <strong>“{q}”</strong>{subject ? ` in ${subject.replace(/([A-Z])/g, ' $1').trim()}` : ''}
+        </p>
+      )}
+
       {/* Results */}
       {status === 'done' && results.length > 0 && (
         <div className="search-results" role="list" aria-live="polite">
@@ -143,7 +160,11 @@ export function SearchClient({ initialQ, initialSubject, subjects }: Props) {
       )}
 
       {status === 'done' && q && results.length === 0 && (
-        <p className="search-empty">No results for "{q}"</p>
+        <p className="search-empty">Try a broader term or select another subject.</p>
+      )}
+
+      {status === 'error' && (
+        <p className="search-empty" role="alert">Search is temporarily unavailable. Please refresh and try again.</p>
       )}
 
       {status === 'idle' && (

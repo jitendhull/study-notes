@@ -25,11 +25,13 @@ export default function HomePage() {
 
   return (
     <PageShell tree={tree}>
-      <h1 className="hero-title">MDU BCA Study Notes</h1>
-      <p className="hero-sub">Semester I · {meta.stats.totalNotes} notes across {subjects.length} subjects</p>
+      <section className="home-hero" aria-labelledby="home-title">
+        <p className="hero-eyebrow">MDU · BCA · Semester I</p>
+        <h1 id="home-title" className="hero-title">Study notes, organized for clarity.</h1>
+        <p className="hero-sub">{meta.stats.totalNotes} curated notes across {subjects.length} subjects, ready whenever you need a focused revision session.</p>
+      </section>
 
-      {/* Stats */}
-      <div className="stats-row">
+      <div className="stats-row" aria-label="Study-note statistics">
         {[
           { label: 'Notes', value: meta.stats.totalNotes },
           { label: 'Subjects', value: subjects.length },
@@ -42,9 +44,14 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Subjects */}
-      <div className="section-title">Subjects</div>
-      <div className="subject-grid">
+      <section className="subject-section" aria-labelledby="subjects-heading">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">Browse by subject</p>
+            <h2 id="subjects-heading" className="section-title">Start where you are studying</h2>
+          </div>
+        </div>
+        <div className="subject-grid">
         {subjects.map(subj => {
           const count = Object.values(tree).flatMap(sem =>
             Object.values(sem[subj] ?? {}).flat()
@@ -61,7 +68,8 @@ export default function HomePage() {
             </Link>
           );
         })}
-      </div>
+        </div>
+      </section>
     </PageShell>
   );
 }

@@ -1,21 +1,30 @@
 'use client';
 
-// Toggles sidebar open/closed on mobile via data-attr on #layout-root.
-// CSS does the actual show/hide — no JS state serialization.
+import { useState } from 'react';
+
+// CSS controls the sidebar visibility; this component exposes the same state to assistive technology.
 export function MobileMenuToggle() {
+  const [isOpen, setIsOpen] = useState(false);
+
   function toggle() {
     const root = document.getElementById('layout-root');
-    if (root) root.toggleAttribute('data-sidebar-open');
+    if (!root) return;
+
+    const nextOpen = !root.hasAttribute('data-sidebar-open');
+    root.toggleAttribute('data-sidebar-open', nextOpen);
+    setIsOpen(nextOpen);
   }
 
   return (
     <button
+      type="button"
       onClick={toggle}
-      aria-label="Toggle navigation"
+      aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
       aria-controls="sidebar"
-      className="icon-btn mobile-only"
+      aria-expanded={isOpen}
+      className="icon-btn mobile-only mobile-menu-toggle"
     >
-      <span aria-hidden>☰</span>
+      <span aria-hidden="true">{isOpen ? '×' : '☰'}</span>
     </button>
   );
 }

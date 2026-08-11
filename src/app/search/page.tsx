@@ -24,7 +24,11 @@ export default async function SearchPage({ searchParams }: Props) {
 
   return (
     <PageShell tree={tree}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 1.5rem' }}>Search</h1>
+      <div className="page-heading">
+        <p className="page-eyebrow">Knowledge base</p>
+        <h1 className="page-title">Search notes</h1>
+        <p className="page-description">Find concepts, examples, and explanations across your study materials.</p>
+      </div>
       <SearchClient
         initialQ={initialQ}
         initialSubject={initialSubject}

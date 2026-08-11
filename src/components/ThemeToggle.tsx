@@ -1,33 +1,45 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 
+type Theme = 'light' | 'dark';
+
+function getPreferredTheme(): Theme {
+  const stored = localStorage.getItem('theme');
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export function ThemeToggle() {
-  // Start null — render nothing until we know actual theme (avoid hydration mismatch).
-  const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
+  // Render the final control only after the browser preference is known.
+  const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const pref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    setTheme(stored ?? pref);
+    const preferredTheme = getPreferredTheme();
+    document.documentElement.setAttribute('data-theme', preferredTheme);
+    setTheme(preferredTheme);
   }, []);
 
   function toggle() {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    localStorage.setItem('theme', next);
-    document.documentElement.setAttribute('data-theme', next);
+    const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    setTheme(nextTheme);
   }
 
-  if (!theme) return <div style={{ width: 32 }} aria-hidden />;
+  if (!theme) return <span className="theme-toggle-placeholder" aria-hidden="true" />;
 
+  const isDark = theme === 'dark';
   return (
     <button
+      type="button"
       onClick={toggle}
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-      className="icon-btn"
-      title={theme === 'light' ? 'Dark mode' : 'Light mode'}
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      aria-pressed={isDark}
+      className="icon-btn theme-toggle"
+      title={isDark ? 'Light mode' : 'Dark mode'}
     >
-      {theme === 'light' ? '🌙' : '☀️'}
+      <span aria-hidden="true">{isDark ? '☀️' : '🌙'}</span>
     </button>
   );
 }
