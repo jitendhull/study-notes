@@ -17,7 +17,7 @@ export function KeyboardShortcuts() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      const isTyping = target?.matches('input, textarea, select, [contenteditable="true"]');
+      const isTyping = target?.matches('input, textarea, select, [contenteditable]');
       if (event.key === '?' && !isTyping) {
         event.preventDefault();
         setOpen(true);
