@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { MobileMenuToggle } from '@/components/MobileMenuToggle';
 import { CommandPalette } from '@/components/CommandPalette';
 import { ReadingListLink } from '@/components/ReadingListLink';
+import { AnnotationsLink } from '@/components/AnnotationsLink';
 import type { NoteTree } from '@/types';
 
 function NoteLink({ id, title, currentId }: { id: string; title: string; currentId?: string }) {
@@ -55,6 +56,7 @@ function SidebarNav({ tree, currentId }: { tree: NoteTree; currentId?: string })
         <Link href="/library" className="sidebar-quick-link">Browse the catalogue</Link>
         <Link href="/search" className="sidebar-quick-link">Search every note</Link>
         <ReadingListLink />
+        <AnnotationsLink />
       </div>
       {semesters.map(semester => (
         <section key={semester} className="nav-semester" aria-label={semester}>

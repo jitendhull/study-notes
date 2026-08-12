@@ -6,6 +6,7 @@ import { extractNoteHeadings, renderMarkdown } from '@/lib/markdown';
 import { PageShell } from '@/components/PageShell';
 import { TableOfContents } from '@/components/TableOfContents';
 import { BookmarkButton } from '@/components/BookmarkButton';
+import { AnnotationPanel } from '@/components/AnnotationPanel';
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -89,6 +90,8 @@ export default async function NotePage({ params }: Props) {
         <article className="prose" dangerouslySetInnerHTML={{ __html: html }} />
         <TableOfContents headings={headings} />
       </div>
+
+      <AnnotationPanel noteId={id} />
 
       {/* Related notes */}
       {related.length > 0 && (
