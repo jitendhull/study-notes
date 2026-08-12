@@ -3243,3 +3243,29 @@ img, svg, video, canvas { max-width: 100%; }
     display: none;
   }
 }
+
+/* Phone shell reset: legacy sidebar grid rules must not reserve a desktop track. */
+@media (max-width: 719px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--header-h) minmax(0, 1fr);
+  }
+
+  .layout-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .layout-main {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+
+  .layout-sidebar {
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+}
