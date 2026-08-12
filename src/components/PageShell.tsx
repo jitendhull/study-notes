@@ -1,15 +1,10 @@
-// Pure server component — no 'use client'.
-// Renders layout structure, sidebar, and main content server-side.
-// Only the interactive islands (ThemeToggle, MobileToggle) are client.
+// Pure server component — renders the document tree and app frame server-side.
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MobileMenuToggle } from '@/components/MobileMenuToggle';
 import { CommandPalette } from '@/components/CommandPalette';
-import { BookOpen, LibraryBig } from 'lucide-react';
 import type { NoteTree } from '@/types';
-
-// ── Sidebar tree (pure server) ────────────────────────────────
 
 function NoteLink({ id, title, currentId }: { id: string; title: string; currentId?: string }) {
   const active = currentId === id;
@@ -32,9 +27,7 @@ function UnitGroup({ unit, notes, currentId }: {
   return (
     <div className="nav-unit-group">
       <div className="nav-unit-label">{unit}</div>
-      {notes.map(n => (
-        <NoteLink key={n.id} id={n.id} title={n.title} currentId={currentId} />
-      ))}
+      {notes.map(note => <NoteLink key={note.id} id={note.id} title={note.title} currentId={currentId} />)}
     </div>
   );
 }
@@ -48,9 +41,7 @@ function SubjectGroup({ subject, units, currentId }: {
   return (
     <details className="nav-subject" open>
       <summary className="nav-subject-label">{label}</summary>
-      {Object.keys(units).sort().map(unit => (
-        <UnitGroup key={unit} unit={unit} notes={units[unit]} currentId={currentId} />
-      ))}
+      {Object.keys(units).sort().map(unit => <UnitGroup key={unit} unit={unit} notes={units[unit]} currentId={currentId} />)}
     </details>
   );
 }
@@ -58,43 +49,37 @@ function SubjectGroup({ subject, units, currentId }: {
 function SidebarNav({ tree, currentId }: { tree: NoteTree; currentId?: string }) {
   const semesters = Object.keys(tree).sort().reverse();
   return (
-    <nav aria-label="Note navigation" className="sidebar-nav">
+    <nav aria-label="Study note document tree" className="sidebar-nav">
       <div className="sidebar-quick-links">
-        <Link href="/library" className="sidebar-quick-link"><LibraryBig size={16} aria-hidden="true" /> All notes</Link>
-        <Link href="/search" className="sidebar-quick-link">Advanced search</Link>
+        <Link href="/library" className="sidebar-quick-link">Browse the catalogue</Link>
+        <Link href="/search" className="sidebar-quick-link">Search every note</Link>
       </div>
-      {semesters.map(sem => (
-        <div key={sem} className="nav-semester">
-          <div className="nav-semester-label">{sem}</div>
-          {Object.keys(tree[sem]).sort().map(subj => (
-            <SubjectGroup
-              key={subj}
-              subject={subj}
-              units={tree[sem][subj]}
-              currentId={currentId}
-            />
+      {semesters.map(semester => (
+        <section key={semester} className="nav-semester" aria-label={semester}>
+          <div className="nav-semester-label">{semester}</div>
+          {Object.keys(tree[semester]).sort().map(subject => (
+            <SubjectGroup key={subject} subject={subject} units={tree[semester][subject]} currentId={currentId} />
           ))}
-        </div>
+        </section>
       ))}
     </nav>
   );
 }
 
-// ── Header (server shell + client islands) ────────────────────
-
 function HeaderBar() {
   return (
     <header className="header">
       <MobileMenuToggle />
-      <Link href="/" className="header-logo"><BookOpen size={18} aria-hidden="true" /><span>Study Notes</span></Link>
-      <Link href="/library" className="header-library-link"><LibraryBig size={16} aria-hidden="true" /><span>Browse</span></Link>
+      <Link href="/" className="header-logo">
+        <span className="header-logo-name">Study Notes</span>
+        <span className="header-logo-edition">BCA · Semester I</span>
+      </Link>
+      <Link href="/library" className="header-library-link">Catalogue</Link>
       <CommandPalette />
       <ThemeToggle />
     </header>
   );
 }
-
-// ── Page shell (server) ───────────────────────────────────────
 
 export function PageShell({ tree, currentId, children }: {
   tree: NoteTree;
@@ -103,15 +88,9 @@ export function PageShell({ tree, currentId, children }: {
 }) {
   return (
     <div className="layout" id="layout-root">
-      <div className="layout-header">
-        <HeaderBar />
-      </div>
-      <div className="layout-sidebar" id="sidebar">
-        <SidebarNav tree={tree} currentId={currentId} />
-      </div>
-      <main className="layout-main">
-        {children}
-      </main>
+      <div className="layout-header"><HeaderBar /></div>
+      <aside className="layout-sidebar" id="sidebar"><SidebarNav tree={tree} currentId={currentId} /></aside>
+      <main className="layout-main">{children}</main>
     </div>
   );
 }

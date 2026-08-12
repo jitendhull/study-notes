@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDownAZ, CalendarClock, Grid2X2, List, Search, SlidersHorizontal, Tags } from 'lucide-react';
 import type { NoteMeta } from '@/types';
-import { AnimateIn } from '@/components/AnimateIn';
 
 type ViewMode = 'grid' | 'list';
 type SortMode = 'title' | 'recent' | 'length';
@@ -33,7 +32,7 @@ export function NoteBrowser({ notes, subjects, units, tags }: Props) {
   const [tag, setTag] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [sort, setSort] = useState<SortMode>('title');
-  const [view, setView] = useState<ViewMode>('grid');
+  const [view, setView] = useState<ViewMode>('list');
 
   const filteredNotes = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -87,19 +86,17 @@ export function NoteBrowser({ notes, subjects, units, tags }: Props) {
 
       {filteredNotes.length > 0 ? (
         <div className={`note-browser-results note-browser-${view}`} role="list">
-          {filteredNotes.map((note, index) => (
-            <AnimateIn key={note.id} delay={Math.min(index * 35, 240)} className="note-card-motion">
-              <Link href={`/note/${note.id}`} className="note-browser-card" role="listitem">
-                <div className="note-browser-card-top">
-                  <span className={`badge badge-${note.difficulty}`}>{note.difficulty}</span>
-                  <span className="note-browser-unit">{note.unit}</span>
-                </div>
-                <h2 className="note-browser-title">{note.title}</h2>
-                <p className="note-browser-subject">{formatSubject(note.subject)}</p>
-                <div className="note-browser-tags">{note.tags.slice(0, 3).map(noteTag => <span key={noteTag}>#{noteTag}</span>)}</div>
-                <div className="note-browser-meta"><span><CalendarClock size={14} aria-hidden="true" /> {formatDate(note.dateUpdated || note.dateCreated)}</span><span>{note.wordCount.toLocaleString()} words</span></div>
-              </Link>
-            </AnimateIn>
+          {filteredNotes.map(note => (
+            <Link key={note.id} href={`/note/${note.id}`} className="note-browser-card" role="listitem">
+              <div className="note-browser-card-top">
+                <span className={`badge badge-${note.difficulty}`}>{note.difficulty}</span>
+                <span className="note-browser-unit">{note.unit}</span>
+              </div>
+              <h2 className="note-browser-title">{note.title}</h2>
+              <p className="note-browser-subject">{formatSubject(note.subject)}</p>
+              <div className="note-browser-tags">{note.tags.slice(0, 3).map(noteTag => <span key={noteTag}>#{noteTag}</span>)}</div>
+              <div className="note-browser-meta"><span><CalendarClock size={14} aria-hidden="true" /> {formatDate(note.dateUpdated || note.dateCreated)}</span><span>{note.wordCount.toLocaleString()} words</span></div>
+            </Link>
           ))}
         </div>
       ) : (

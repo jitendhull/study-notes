@@ -16,9 +16,9 @@ export default function LibraryPage() {
   return (
     <PageShell tree={tree}>
       <div className="page-heading library-heading">
-        <p className="page-eyebrow">Study library</p>
-        <h1 className="page-title">All notes, in one focused workspace.</h1>
-        <p className="page-description">Filter by subject, unit, tag, or level. Switch between card and compact list views to find the right study material faster.</p>
+        <p className="page-eyebrow">Semester catalogue</p>
+        <h1 className="page-title">The complete note index.</h1>
+        <p className="page-description">Filter the collection by subject, unit, tag, or level. Use the compact view for a quick scan, or open a note directly from the catalogue.</p>
       </div>
       <NoteBrowser
         notes={notes}
