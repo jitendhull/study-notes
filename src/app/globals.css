@@ -1394,7 +1394,7 @@ kbd { display: inline-flex; min-width: 1.2rem; align-items: center; justify-cont
     top: var(--header-h);
     bottom: 0;
     left: 0;
-    width: min(21.5rem, 88vw);
+    width: min(21.5rem, 82vw);
     max-height: none;
     padding-bottom: 1.5rem;
     overflow-y: auto;
@@ -1685,12 +1685,12 @@ kbd { display: inline-flex; min-width: 1.2rem; align-items: center; justify-cont
   --bg-tertiary: #ebe5d9;
   --text-primary: #24231f;
   --text-secondary: #68655e;
-  --text-tertiary: #918d84;
+  --text-tertiary: #6f6b63;
   --accent: #9a4d32;
   --accent-light: #f2e2d8;
   --accent-dark: #713721;
   --border: #d7d0c3;
-  --border-strong: #bfb5a5;
+  --border-strong: #807a70;
   --code-bg: #eae4d9;
   --font-sans: 'IBM Plex Sans Variable', 'IBM Plex Sans', Arial, sans-serif;
   --font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
@@ -1714,7 +1714,7 @@ kbd { display: inline-flex; min-width: 1.2rem; align-items: center; justify-cont
   --accent-light: #3c2b24;
   --accent-dark: #f0ad86;
   --border: #47463f;
-  --border-strong: #656258;
+  --border-strong: #706d62;
   --code-bg: #292a26;
 }
 
@@ -2379,4 +2379,439 @@ img, svg, video, canvas { max-width: 100%; }
   .catalogue-register > div + div { padding-left: 0.35rem; }
   .catalogue-register span { font-size: 0.5rem; }
   .catalogue-index { font-size: 0.6rem; }
+}
+
+
+/* ── Responsive hardening layer ──────────────────────────────────
+   This final range-based layer supersedes the earlier overlapping rules.
+   It preserves the editorial visual system while providing explicit small-phone,
+   tablet, desktop, and ultrawide layout behaviour. */
+.layout { min-height: 100dvh; }
+.layout-main,
+.catalogue-home,
+.note-browser,
+.note-reading-layout,
+.note-browser-card-link,
+.header,
+.command-trigger { min-width: 0; }
+
+@media (max-width: 719px) {
+  .header {
+    gap: 0.4rem;
+    padding-inline: 0.75rem;
+  }
+
+  .header-logo {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .header-logo-name {
+    display: block;
+    overflow: hidden;
+    max-inline-size: 7.5rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .command-trigger {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 0;
+    padding-inline: 0.2rem;
+  }
+
+  .command-trigger-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .layout-main {
+    padding: clamp(1.45rem, 6vw, 2.1rem) clamp(0.85rem, 4.5vw, 1.1rem) 3rem;
+  }
+
+  .catalogue-intro {
+    padding-bottom: 1.75rem;
+  }
+
+  .catalogue-intro h1 {
+    font-size: clamp(2.15rem, 9.5vw, 2.75rem);
+    line-height: 0.98;
+  }
+
+  .catalogue-summary {
+    margin-top: 1.05rem;
+    font-size: 1rem;
+  }
+
+  .catalogue-links {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.1rem;
+  }
+
+  .catalogue-section {
+    margin-top: 2.8rem;
+  }
+
+  .browser-toolbar {
+    gap: 0.5rem;
+  }
+
+  .browser-filter-bar {
+    gap: 0.35rem 0.65rem;
+  }
+
+  .browser-filter-bar select {
+    min-height: 2.65rem;
+  }
+
+  .note-reading-layout {
+    gap: 1.5rem;
+  }
+
+  /* Keep reading as the first task on phones; navigation follows the article. */
+  .note-toc {
+    order: 0;
+    max-width: 72ch;
+    margin-top: 1.25rem;
+    padding-block: 1rem;
+  }
+
+  .note-toc-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .note-header {
+    gap: 0.75rem;
+  }
+
+  .note-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-logo {
+    flex: 0 0 auto;
+  }
+
+  .header-logo-name {
+    max-inline-size: none;
+    font-size: 0.84rem;
+  }
+
+  .command-trigger {
+    max-inline-size: 7.25rem;
+    font-size: 0.7rem;
+  }
+
+  .catalogue-intro h1 {
+    font-size: 2.15rem;
+  }
+
+  .catalogue-register strong {
+    font-size: 1.32rem;
+  }
+
+  .catalogue-register span {
+    font-size: 0.53rem;
+  }
+}
+
+/* Tablets retain the compact drawer but gain a full-width content canvas. */
+@media (min-width: 720px) and (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--header-h) minmax(0, 1fr);
+  }
+
+  .layout-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .layout-main {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(100%, 78rem);
+    margin-inline: auto;
+    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 3.5rem) 4rem;
+  }
+
+  .layout-sidebar {
+    position: fixed;
+    z-index: 60;
+    top: var(--header-h);
+    bottom: 0;
+    left: 0;
+    display: block;
+    width: min(23rem, 72vw);
+    height: auto;
+    max-height: none;
+    padding-bottom: 1.5rem;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+    background: var(--bg-secondary);
+    box-shadow: 1.25rem 0 2.5rem rgb(0 0 0 / 0.22);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-104%);
+    transition: transform 220ms ease, opacity 180ms ease;
+    visibility: hidden;
+  }
+
+  .layout[data-sidebar-open] .layout-sidebar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .layout[data-sidebar-open]::after {
+    position: fixed;
+    z-index: 50;
+    inset: var(--header-h) 0 0;
+    background: rgb(2 6 23 / 0.55);
+    content: '';
+  }
+
+  .layout-header {
+    z-index: 70;
+  }
+
+  .mobile-only {
+    display: flex !important;
+  }
+
+  .header {
+    gap: 0.75rem;
+    padding-inline: 1.25rem;
+  }
+
+  .header-logo-edition {
+    display: none;
+  }
+
+  .header-library-link {
+    display: block;
+  }
+
+  .command-trigger {
+    min-width: min(16rem, 38vw);
+    max-width: none;
+  }
+
+  .catalogue-intro {
+    max-width: 62rem;
+  }
+
+  .catalogue-section {
+    max-width: 68rem;
+  }
+
+  .browser-filter-bar {
+    gap: 0.5rem 0.85rem;
+  }
+
+  .browser-filter-bar select {
+    flex: 1 1 calc(33.333% - 0.85rem);
+    max-width: none;
+  }
+
+  .note-browser-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .note-browser-list .note-browser-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(9rem, 0.8fr);
+    gap: 0.4rem 1.25rem;
+  }
+
+  .note-browser-list .note-browser-card-top {
+    display: contents;
+  }
+
+  .note-browser-list .note-browser-title {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+
+  .note-browser-list .note-browser-unit {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .note-browser-list .note-browser-subject {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .note-browser-list .badge {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .note-browser-list .note-browser-tags {
+    grid-column: 1;
+    grid-row: 3;
+    margin: 0.1rem 0 0;
+  }
+
+  .note-browser-list .note-browser-meta {
+    display: flex;
+    grid-column: 2;
+    grid-row: 3;
+    justify-content: end;
+    margin: 0;
+    padding: 0;
+    text-align: right;
+  }
+
+  .note-reading-layout {
+    grid-template-columns: minmax(0, 72ch);
+    gap: 1.75rem;
+  }
+
+  .note-toc {
+    position: static;
+    order: -1;
+    max-width: 72ch;
+    padding: 0.95rem 0;
+    border-block: 1px solid var(--border);
+    border-inline: 0;
+  }
+
+  .note-toc-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .layout-main {
+    width: min(100%, 92rem);
+    max-width: none;
+    padding-inline: clamp(3rem, 5vw, 7rem);
+  }
+
+  .catalogue-home {
+    max-width: 78rem;
+  }
+
+  .catalogue-intro {
+    max-width: 62rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  .layout-main {
+    width: min(100%, 112rem);
+    padding-inline: clamp(4rem, 7vw, 12rem);
+  }
+
+  .catalogue-home {
+    max-width: 88rem;
+  }
+
+  .catalogue-intro {
+    max-width: 66rem;
+  }
+
+  .catalogue-recent {
+    max-width: 72rem;
+  }
+}
+
+
+/* Responsive table-of-contents disclosure */
+.note-toc > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.note-toc > summary::-webkit-details-marker { display: none; }
+
+.note-toc-toggle {
+  display: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: 0 0 auto;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg) translateY(-0.15rem);
+  transition: transform 160ms ease;
+}
+
+.note-toc[open] .note-toc-toggle {
+  transform: rotate(225deg) translate(-0.1rem, -0.1rem);
+}
+
+@media (max-width: 719px) {
+  details.note-toc {
+    order: -1;
+    margin: 0;
+    padding: 0;
+    border-block: 1px solid var(--border);
+    border-inline: 0;
+    background: transparent;
+  }
+
+  .note-toc > summary {
+    min-height: 2.75rem;
+    padding-inline: 0.1rem;
+  }
+
+  .note-toc-toggle {
+    display: block;
+  }
+
+  .note-toc-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 1rem;
+    padding: 0.1rem 0 1rem;
+  }
+
+  .note-toc-subitem {
+    padding-left: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-toc-toggle { transition: none; }
+}
+
+
+@media (min-width: 720px) and (max-width: 1023px) {
+  .header-logo {
+    min-width: 10rem;
+    flex: 0 0 auto;
+  }
+
+  .header-logo-name {
+    white-space: nowrap;
+  }
+}
+
+
+@media (max-width: 1023px) {
+  .layout-sidebar {
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+
+  .mobile-menu-toggle {
+    touch-action: manipulation;
+  }
 }
