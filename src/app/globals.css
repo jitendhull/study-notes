@@ -2815,3 +2815,228 @@ img, svg, video, canvas { max-width: 100%; }
     touch-action: manipulation;
   }
 }
+
+
+/* ── Phone homepage priority layer (375–430px) ──────────────────── */
+.catalogue-stat-label-mobile,
+.catalogue-action-label-short { display: none; }
+
+@media (max-width: 479px) {
+  .header {
+    gap: 0.35rem;
+    padding-inline: 0.625rem;
+  }
+
+  .header .icon-btn,
+  .command-trigger {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    flex: 0 0 2.75rem;
+  }
+
+  .header-logo {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .header-logo-name {
+    max-inline-size: none;
+    font-size: 0.98rem;
+  }
+
+  /* The existing Radix dialog becomes the mobile search surface. */
+  .command-trigger {
+    display: grid;
+    place-items: center;
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+  }
+
+  .command-trigger-label,
+  .command-shortcut { display: none; }
+
+  .command-trigger svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .command-dialog {
+    top: 0;
+    left: 0;
+    width: 100vw;
+    max-height: none;
+    height: 100dvh;
+    transform: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .command-search-row {
+    min-height: 4.25rem;
+    padding-inline: 1rem;
+  }
+
+  .command-results {
+    min-height: 0;
+    max-height: calc(100dvh - 4.25rem);
+  }
+
+  .layout-main {
+    padding: 1.25rem 1rem 2.75rem;
+  }
+
+  .catalogue-intro {
+    padding-bottom: 1.25rem;
+  }
+
+  .catalogue-intro .catalogue-kicker {
+    margin-bottom: 0.7rem;
+    font-size: 0.61rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .catalogue-intro h1 {
+    max-width: none;
+    font-size: clamp(2rem, 9.2vw, 2.2rem);
+    line-height: 0.97;
+    letter-spacing: -0.045em;
+  }
+
+  .catalogue-title-line { display: block; }
+
+  .catalogue-summary {
+    max-width: 38ch;
+    margin-top: 0.8rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .catalogue-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-top: 1rem;
+  }
+
+  .catalogue-links .catalogue-action-link {
+    display: flex;
+    min-height: 2.75rem;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.55rem 0.65rem 0.55rem 0.75rem;
+    border: 1px solid var(--border-strong);
+    color: var(--accent);
+    font-size: 0.71rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    text-decoration: none;
+  }
+
+  .catalogue-links .catalogue-action-link::after {
+    content: '→';
+    flex: 0 0 auto;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .catalogue-links .catalogue-action-link:hover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .catalogue-links .catalogue-action-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .catalogue-action-label-long,
+  .catalogue-stat-label-full { display: none; }
+
+  .catalogue-action-label-short,
+  .catalogue-stat-label-mobile { display: inline; }
+
+  .catalogue-register {
+    grid-template-columns: minmax(0, 1fr);
+    border-top: 1px solid var(--border);
+  }
+
+  .catalogue-register > div {
+    display: flex;
+    align-items: baseline;
+    gap: 0.65rem;
+    min-width: 0;
+    padding: 0.62rem 0;
+  }
+
+  .catalogue-register > div + div {
+    padding-left: 0;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+
+  .catalogue-register strong {
+    min-width: 1.15rem;
+    font-size: 1.38rem;
+    text-align: right;
+  }
+
+  .catalogue-register .catalogue-stat-label-mobile {
+    max-width: none;
+    color: var(--text-tertiary);
+    font-size: 0.67rem;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+  }
+
+  .catalogue-section {
+    margin-top: 2.35rem;
+  }
+
+  .catalogue-section-heading {
+    margin-bottom: 1rem;
+  }
+
+  .catalogue-section-heading h2 {
+    max-width: 16ch;
+    font-size: clamp(1.62rem, 7.2vw, 1.94rem);
+    line-height: 1.03;
+    letter-spacing: -0.032em;
+  }
+
+  .catalogue-subject-row {
+    grid-template-areas:
+      'index count'
+      'copy copy';
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.38rem;
+    column-gap: 0.75rem;
+    align-items: start;
+    min-height: 2.75rem;
+    padding-block: 1rem;
+  }
+
+  .catalogue-subject-row .catalogue-index {
+    grid-area: index;
+    align-self: center;
+    font-size: 0.64rem;
+  }
+
+  .catalogue-subject-copy { grid-area: copy; }
+
+  .catalogue-count {
+    grid-area: count;
+    align-self: center;
+    font-size: 0.68rem;
+  }
+
+  .catalogue-subject-copy strong {
+    font-size: 1.16rem;
+    line-height: 1.12;
+  }
+}

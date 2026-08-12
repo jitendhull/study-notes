@@ -21,6 +21,16 @@ const SUBJECT_DETAILS: Record<string, { label: string; description: string }> = 
 
 const asLabel = (value: string) => value.replace(/([A-Z])/g, ' $1').trim();
 
+function Stat({ value, fullLabel, mobileLabel }: { value: number; fullLabel: string; mobileLabel: string }) {
+  return (
+    <div>
+      <strong>{value}</strong>
+      <span className="catalogue-stat-label catalogue-stat-label-full">{fullLabel}</span>
+      <span className="catalogue-stat-label catalogue-stat-label-mobile">{mobileLabel}</span>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const notes = getAllNotes();
   const tree = buildTree(notes);
@@ -39,20 +49,31 @@ export default function HomePage() {
       <div className="catalogue-home">
         <header className="catalogue-intro" aria-labelledby="home-title">
           <p className="catalogue-kicker">MDU BCA · Semester I · Reference Library</p>
-          <h1 id="home-title">Notes arranged for finding, reading, and returning.</h1>
+          <h1 id="home-title">
+            <span className="catalogue-title-line">Notes arranged</span>{' '}
+            <span className="catalogue-title-line">for finding,</span>{' '}
+            <span className="catalogue-title-line">reading, and</span>{' '}
+            <span className="catalogue-title-line">returning.</span>
+          </h1>
           <p className="catalogue-summary">
             A working catalogue for the concepts in this semester. Browse by subject and unit, or search the entire collection when you know what you need.
           </p>
           <div className="catalogue-links" aria-label="Primary study actions">
-            <Link href="/library">Browse the complete catalogue</Link>
-            <Link href="/search">Search a topic</Link>
+            <Link href="/library" className="catalogue-action-link">
+              <span className="catalogue-action-label-long">Browse the complete catalogue</span>
+              <span className="catalogue-action-label-short">Browse catalogue</span>
+            </Link>
+            <Link href="/search" className="catalogue-action-link">
+              <span className="catalogue-action-label-long">Search a topic</span>
+              <span className="catalogue-action-label-short">Search notes</span>
+            </Link>
           </div>
         </header>
 
         <section className="catalogue-register" aria-label="Library register">
-          <div><strong>{meta.stats.totalNotes}</strong><span>notes in this library</span></div>
-          <div><strong>{subjects.length}</strong><span>subjects in this semester</span></div>
-          <div><strong>{meta.semesters.length}</strong><span>semester represented</span></div>
+          <Stat value={meta.stats.totalNotes} fullLabel="notes in this library" mobileLabel="notes" />
+          <Stat value={subjects.length} fullLabel="subjects in this semester" mobileLabel="subjects" />
+          <Stat value={meta.semesters.length} fullLabel="semester represented" mobileLabel="semester" />
         </section>
 
         <section className="catalogue-section" aria-labelledby="subjects-heading">
