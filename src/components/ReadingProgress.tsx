@@ -5,9 +5,11 @@ import { getNoteProgress, recordNoteProgress } from '@/components/StudyProgress'
 
 export function ReadingProgress({ noteId }: { noteId: string }) {
   const [progress, setProgress] = useState(0);
-  const lastRecordedRef = useRef(-1);
+  const lastRecordedRef = useRef(0);
 
   useEffect(() => {
+    lastRecordedRef.current = getNoteProgress(noteId);
+
     const updateProgress = () => {
       const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
       const next = scrollableHeight <= 0
@@ -15,7 +17,7 @@ export function ReadingProgress({ noteId }: { noteId: string }) {
         : Math.max(0, Math.min(100, Math.round((window.scrollY / scrollableHeight) * 100)));
 
       setProgress(next);
-      const furthest = Math.max(getNoteProgress(noteId), next);
+      const furthest = Math.max(lastRecordedRef.current, next);
       if (furthest !== lastRecordedRef.current) {
         lastRecordedRef.current = furthest;
         recordNoteProgress(noteId, furthest);
