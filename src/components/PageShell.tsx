@@ -7,6 +7,7 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { ReadingListLink } from '@/components/ReadingListLink';
 import { AnnotationsLink } from '@/components/AnnotationsLink';
 import { MobilePrimaryNav } from '@/components/MobilePrimaryNav';
+import { RouteTransition } from '@/components/RouteTransition';
 import type { NoteTree } from '@/types';
 
 function NoteLink({ id, title, currentId }: { id: string; title: string; currentId?: string }) {
@@ -95,7 +96,7 @@ export function PageShell({ tree, currentId, children }: {
     <div className="layout" id="layout-root">
       <div className="layout-header"><HeaderBar /></div>
       <aside className="layout-sidebar" id="sidebar"><SidebarNav tree={tree} currentId={currentId} /></aside>
-      <main className="layout-main">{children}</main>
+      <main className="layout-main"><RouteTransition>{children}</RouteTransition></main>
       <MobilePrimaryNav />
     </div>
   );

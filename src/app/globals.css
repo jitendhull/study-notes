@@ -3457,3 +3457,144 @@ img, svg, video, canvas { max-width: 100%; }
     transition: none;
   }
 }
+
+/* Motion system: calm feedback for study navigation, not decorative movement. */
+:root {
+  --ease-study: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --duration-quick: 120ms;
+  --duration-standard: 180ms;
+  --duration-route: 220ms;
+}
+
+.route-transition {
+  animation: route-arrive var(--duration-route) var(--ease-study) both;
+}
+
+@keyframes route-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(0.45rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-note,
+.sidebar-quick-link,
+.catalogue-subject-row,
+.catalogue-note-list a,
+.related-link,
+.mobile-primary-nav-link,
+.command-result,
+.command-recent,
+.command-quick-start,
+.catalogue-action-link,
+.catalogue-mobile-subject-link {
+  transition: color var(--duration-quick) ease, background-color var(--duration-quick) ease, border-color var(--duration-quick) ease, transform var(--duration-quick) var(--ease-study), box-shadow var(--duration-standard) var(--ease-study);
+}
+
+.nav-subject-label {
+  transition: color var(--duration-quick) ease, background-color var(--duration-quick) ease;
+}
+
+.nav-subject[open] > .nav-subject-label {
+  color: var(--accent);
+}
+
+.nav-note-active {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.catalogue-subject-row:active,
+.catalogue-note-list a:active,
+.command-result:active,
+.command-quick-start:active,
+.mobile-primary-nav-link:active,
+.continue-study-action:active {
+  transform: scale(0.985);
+}
+
+.mobile-primary-nav-link-active::after {
+  position: absolute;
+  bottom: 0.28rem;
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: currentColor;
+  content: '';
+  animation: nav-indicator-in var(--duration-standard) var(--ease-study) both;
+}
+
+@keyframes nav-indicator-in {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-note:hover {
+    color: var(--accent);
+    transform: translateX(0.2rem);
+  }
+
+  .sidebar-quick-link:hover {
+    color: var(--accent);
+    transform: translateX(0.16rem);
+  }
+
+  .catalogue-subject-row:hover,
+  .catalogue-note-list a:hover {
+    border-color: var(--accent);
+    box-shadow: inset 0.22rem 0 0 var(--accent);
+    transform: translateX(0.18rem);
+  }
+
+  .related-link:hover,
+  .catalogue-action-link:hover,
+  .catalogue-mobile-subject-link:hover {
+    color: var(--accent);
+    text-decoration-thickness: 0.12em;
+    text-underline-offset: 0.24em;
+  }
+
+  .command-result:hover,
+  .command-quick-start:hover,
+  .command-recent:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent);
+  }
+
+  .mobile-primary-nav-link:hover {
+    color: var(--accent);
+    transform: translateY(-0.12rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-transition,
+  .mobile-primary-nav-link-active::after {
+    animation: none;
+  }
+
+  .nav-note,
+  .sidebar-quick-link,
+  .catalogue-subject-row,
+  .catalogue-note-list a,
+  .related-link,
+  .mobile-primary-nav-link,
+  .command-result,
+  .command-recent,
+  .command-quick-start,
+  .catalogue-action-link,
+  .catalogue-mobile-subject-link,
+  .nav-subject-label {
+    transition: none;
+  }
+}
