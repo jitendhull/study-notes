@@ -3269,3 +3269,191 @@ img, svg, video, canvas { max-width: 100%; }
     grid-row: 1 / -1;
   }
 }
+
+/* Study-flow UX branch: resume learning, mobile primary navigation, and search shortcuts. */
+.continue-study {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 2rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--paper) 94%, var(--accent) 6%);
+}
+
+.continue-study-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--accent);
+}
+
+.continue-study-copy .catalogue-kicker {
+  margin: 0 0 0.25rem;
+}
+
+.continue-study-copy h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.12;
+}
+
+.continue-study-copy p:not(.catalogue-kicker) {
+  margin: 0.25rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.83rem;
+}
+
+.continue-study-action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.continue-study-action:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.command-quick-starts {
+  margin-top: 1.15rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.85rem;
+}
+
+.command-quick-start {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.command-quick-start:hover,
+.command-quick-start:focus-visible {
+  color: var(--accent);
+}
+
+.mobile-primary-nav {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .layout-main {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  }
+
+  .continue-study {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    margin: 0 0 1.35rem;
+    padding: 0.9rem;
+  }
+
+  .continue-study-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .continue-study-copy h2 {
+    font-size: 1.16rem;
+  }
+
+  .continue-study-action {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0.1rem;
+  }
+
+  .mobile-primary-nav {
+    position: fixed;
+    z-index: 70;
+    right: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    left: 0.75rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-height: 4.2rem;
+    padding: 0.25rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--ink) 24%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobile-primary-nav-link {
+    position: relative;
+    display: grid;
+    min-height: 3.6rem;
+    place-items: center;
+    align-content: center;
+    gap: 0.17rem;
+    border-radius: 0.72rem;
+    color: var(--ink-muted);
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+  }
+
+  .mobile-primary-nav-link-active {
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--accent);
+  }
+
+  .mobile-primary-nav-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  .mobile-primary-nav-count {
+    position: absolute;
+    top: -0.37rem;
+    right: -0.6rem;
+    display: grid;
+    min-width: 1rem;
+    height: 1rem;
+    place-items: center;
+    border: 1px solid var(--paper);
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--paper);
+    font-size: 0.55rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .command-quick-start {
+    min-height: 3.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .continue-study-action {
+    transition: none;
+  }
+}

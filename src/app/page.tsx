@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getAllNotes, buildTree, buildSiteMetadata } from '@/lib/notes';
 import { PageShell } from '@/components/PageShell';
 import { CommandPalette } from '@/components/CommandPalette';
+import { ContinueStudying } from '@/components/ContinueStudying';
 
 export const metadata: Metadata = {
   title: 'Study Notes — MDU BCA Semester I',
@@ -71,6 +72,8 @@ export default function HomePage() {
             </Link>
           </div>
         </header>
+
+        <ContinueStudying />
 
         <section className="catalogue-register" aria-label="Library register">
           <Stat value={meta.stats.totalNotes} fullLabel="notes in this library" mobileLabel="notes" />

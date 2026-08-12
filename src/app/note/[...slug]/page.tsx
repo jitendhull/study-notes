@@ -7,6 +7,7 @@ import { PageShell } from '@/components/PageShell';
 import { TableOfContents } from '@/components/TableOfContents';
 import { BookmarkButton } from '@/components/BookmarkButton';
 import { AnnotationPanel } from '@/components/AnnotationPanel';
+import { StudyHistoryTracker } from '@/components/StudyHistoryTracker';
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -56,6 +57,7 @@ export default async function NotePage({ params }: Props) {
 
   return (
     <PageShell tree={tree} currentId={id}>
+      <StudyHistoryTracker id={id} title={meta.title} subject={meta.subject} unit={meta.unit} />
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="breadcrumb">
         <Link href="/" className="breadcrumb-link">Home</Link>
