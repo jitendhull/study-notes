@@ -5,6 +5,7 @@ import { getAllNotes, getNoteRaw, buildTree } from '@/lib/notes';
 import { extractNoteHeadings, renderMarkdown } from '@/lib/markdown';
 import { PageShell } from '@/components/PageShell';
 import { TableOfContents } from '@/components/TableOfContents';
+import { BookmarkButton } from '@/components/BookmarkButton';
 
 interface Props {
   params: Promise<{ slug: string[] }>;
@@ -75,9 +76,12 @@ export default async function NotePage({ params }: Props) {
             </Link>
           ))}
         </div>
-        {meta.dateUpdated && (
-          <p className="note-date">Updated {meta.dateUpdated}</p>
-        )}
+        <div className="note-header-actions">
+          {meta.dateUpdated && (
+            <p className="note-date">Updated {meta.dateUpdated}</p>
+          )}
+          <BookmarkButton noteId={id} noteTitle={meta.title} />
+        </div>
       </header>
 
       {/* Note body + static table of contents */}
