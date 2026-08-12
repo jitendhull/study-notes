@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { searchNotes, type IndexedSearchResult, type SearchFilters } from '@/lib/search-client';
+import { SubjectProgress } from '@/components/SubjectProgress';
 
 interface Props {
   initialQ: string;
@@ -13,6 +14,7 @@ interface Props {
   subjects: string[];
   units: string[];
   tags: string[];
+  subjectNoteIds: string[];
 }
 
 const DIFFICULTIES = ['easy', 'intermediate', 'hard'];
@@ -37,6 +39,7 @@ export function SearchClient({
   subjects,
   units,
   tags,
+  subjectNoteIds,
 }: Props) {
   const [q, setQ] = useState(initialQ);
   const [filters, setFilters] = useState<SearchFilters>({
@@ -106,6 +109,10 @@ export function SearchClient({
         />
       </div>
 
+      {filters.subject && subjectNoteIds.length > 0 && (
+        <SubjectProgress subject={filters.subject} noteIds={subjectNoteIds} />
+      )}
+
       <div className="search-filter-row" aria-label="Search filters">
         <select value={filters.subject ?? ''} onChange={event => setFilter('subject', event.target.value)} aria-label="Filter by subject" className="search-filter-select">
           <option value="">All subjects</option>
@@ -126,8 +133,15 @@ export function SearchClient({
       </div>
 
       {status === 'loading' && (
-        <div className="search-results" aria-label="Loading results">
-          {[0, 1, 2].map(index => <div key={index} className="skeleton" />)}
+        <div className="search-results search-results-skeleton" aria-label="Loading results" aria-busy="true">
+          {[0, 1, 2].map(index => (
+            <div key={index} className="search-skeleton-card" aria-hidden="true">
+              <span className="skeleton-line skeleton-line-title" />
+              <span className="skeleton-line skeleton-line-meta" />
+              <span className="skeleton-line skeleton-line-copy" />
+              <span className="skeleton-line skeleton-line-copy skeleton-line-short" />
+            </div>
+          ))}
         </div>
       )}
 
@@ -153,7 +167,14 @@ export function SearchClient({
       )}
 
       {status === 'done' && q && results.length === 0 && (
-        <p className="search-empty">Try a broader term or remove one of the filters.</p>
+        <div className="search-empty-state" role="status">
+          <h2>No matching notes yet.</h2>
+          <p>Try a broader term, or clear the filters to search the full library.</p>
+          <div className="search-empty-actions">
+            <button type="button" className="catalogue-quiet-link" onClick={() => { setQ(''); setFilters({}); }}>Clear search</button>
+            <Link href="/library" className="catalogue-quiet-link">Browse subjects</Link>
+          </div>
+        </div>
       )}
 
       {status === 'error' && (

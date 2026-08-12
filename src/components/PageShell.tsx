@@ -8,6 +8,7 @@ import { ReadingListLink } from '@/components/ReadingListLink';
 import { AnnotationsLink } from '@/components/AnnotationsLink';
 import { MobilePrimaryNav } from '@/components/MobilePrimaryNav';
 import { RouteTransition } from '@/components/RouteTransition';
+import { KeyboardShortcuts } from '@/components/KeyboardShortcuts';
 import type { NoteTree } from '@/types';
 
 function NoteLink({ id, title, currentId }: { id: string; title: string; currentId?: string }) {
@@ -82,6 +83,7 @@ function HeaderBar() {
       </Link>
       <Link href="/library" className="header-library-link">Catalogue</Link>
       <CommandPalette />
+      <KeyboardShortcuts />
       <ThemeToggle />
     </header>
   );

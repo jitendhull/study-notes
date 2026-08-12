@@ -30,7 +30,11 @@ export function SavedNotesClient({ notes }: { notes: NoteMeta[] }) {
   const savedNotes = savedIds.map(id => notesById.get(id)).filter((note): note is NoteMeta => Boolean(note));
 
   if (!ready) {
-    return <p className="reading-list-status">Loading your reading list…</p>;
+    return (
+      <div className="collection-loading" aria-label="Loading your reading list" aria-busy="true">
+        {[0, 1, 2].map(index => <span key={index} className="collection-loading-row" aria-hidden="true" />)}
+      </div>
+    );
   }
 
   if (savedNotes.length === 0) {
@@ -39,7 +43,10 @@ export function SavedNotesClient({ notes }: { notes: NoteMeta[] }) {
         <Bookmark size={22} aria-hidden="true" />
         <h2>Your reading list is empty.</h2>
         <p>Save notes as you browse and they will stay here on this device for quick access.</p>
-        <Link href="/library" className="catalogue-quiet-link">Browse the catalogue</Link>
+        <div className="empty-state-actions">
+          <Link href="/library" className="catalogue-quiet-link">Browse subjects</Link>
+          <Link href="/search" className="catalogue-quiet-link">Search a topic</Link>
+        </div>
       </div>
     );
   }
