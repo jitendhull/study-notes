@@ -18,7 +18,7 @@ function readRecentSearches() {
   }
 }
 
-export function CommandPalette() {
+export function CommandPalette({ variant = 'header' }: { variant?: 'header' | 'home' }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -107,7 +107,7 @@ export function CommandPalette() {
       if (nextOpen) focusInput();
     }}>
       <Dialog.Trigger asChild>
-        <button type="button" className="command-trigger" aria-label="Open note search command palette">
+        <button type="button" className={`command-trigger command-trigger-${variant}`} aria-label="Open note search command palette">
           <Search size={16} strokeWidth={2} aria-hidden="true" />
           <span className="command-trigger-label">Search notes</span>
           <span className="command-shortcut" aria-hidden="true"><Command size={12} />K</span>

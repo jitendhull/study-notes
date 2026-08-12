@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllNotes, buildTree, buildSiteMetadata } from '@/lib/notes';
 import { PageShell } from '@/components/PageShell';
+import { CommandPalette } from '@/components/CommandPalette';
 
 export const metadata: Metadata = {
   title: 'Study Notes — MDU BCA Semester I',
@@ -47,17 +48,18 @@ export default function HomePage() {
   return (
     <PageShell tree={tree}>
       <div className="catalogue-home">
-        <header className="catalogue-intro" aria-labelledby="home-title">
-          <p className="catalogue-kicker">MDU BCA · Semester I · Reference Library</p>
-          <h1 id="home-title">
-            <span className="catalogue-title-line">Notes arranged</span>{' '}
-            <span className="catalogue-title-line">for finding,</span>{' '}
-            <span className="catalogue-title-line">reading, and</span>{' '}
-            <span className="catalogue-title-line">returning.</span>
-          </h1>
+        <header className="catalogue-intro catalogue-intro-study-first" aria-labelledby="home-title">
+          <p className="catalogue-kicker">MDU BCA · Semester I</p>
+          <h1 id="home-title">Find the note you need.</h1>
           <p className="catalogue-summary">
-            A working catalogue for the concepts in this semester. Browse by subject and unit, or search the entire collection when you know what you need.
+            Search every topic, or open a subject to continue studying.
           </p>
+          <div className="catalogue-home-search" aria-label="Search the study library">
+            <CommandPalette variant="home" />
+          </div>
+          <div className="catalogue-mobile-actions" aria-label="Primary study actions">
+            <a href="#subjects-heading" className="catalogue-mobile-subject-link">Browse subjects <span aria-hidden="true">↓</span></a>
+          </div>
           <div className="catalogue-links" aria-label="Primary study actions">
             <Link href="/library" className="catalogue-action-link">
               <span className="catalogue-action-label-long">Browse the complete catalogue</span>
@@ -79,7 +81,7 @@ export default function HomePage() {
         <section className="catalogue-section" aria-labelledby="subjects-heading">
           <div className="catalogue-section-heading">
             <p className="catalogue-kicker">By subject</p>
-            <h2 id="subjects-heading">Start with the course you are working through.</h2>
+            <h2 id="subjects-heading">Browse subjects</h2>
           </div>
           <div className="catalogue-subjects">
             {subjects.map((subject, index) => {
@@ -103,7 +105,7 @@ export default function HomePage() {
           <div className="catalogue-section-heading catalogue-section-heading-split">
             <div>
               <p className="catalogue-kicker">Recently updated</p>
-              <h2 id="recent-heading">Return to the material that is growing.</h2>
+              <h2 id="recent-heading">Recently updated</h2>
             </div>
             <Link href="/library" className="catalogue-quiet-link">View every note</Link>
           </div>
