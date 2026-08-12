@@ -3,11 +3,16 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Command, FileText, Search, X } from 'lucide-react';
+import { ArrowRight, Command, FileText, FolderTree, Search, X } from 'lucide-react';
 import { searchNotes, type IndexedSearchResult } from '@/lib/search-client';
 
 const RECENT_KEY = 'study-notes:recent-searches';
 const MAX_RECENT_SEARCHES = 5;
+
+const QUICK_STARTS = [
+  { label: 'Browse Mathematics', detail: 'Sets, functions, graphs, and more', href: '/search?subject=Mathematics' },
+  { label: 'Browse Problem Solving', detail: 'Algorithms, reasoning, and methods', href: '/search?subject=ProblemSolving' },
+];
 
 function readRecentSearches() {
   try {
@@ -83,6 +88,11 @@ export function CommandPalette({ variant = 'header' }: { variant?: 'header' | 'h
     rememberSearch(query);
     setOpen(false);
     router.push(`/note/${result.id}`);
+  }
+
+  function openQuickStart(href: string) {
+    setOpen(false);
+    router.push(href);
   }
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -178,6 +188,22 @@ export function CommandPalette({ variant = 'header' }: { variant?: 'header' | 'h
 
             {status === 'idle' && recentSearches.length === 0 && (
               <p className="command-status">Start typing to search across every note. Use <kbd>↑</kbd> <kbd>↓</kbd> then <kbd>Enter</kbd> to open a result.</p>
+            )}
+
+            {status === 'idle' && (
+              <div className="command-quick-starts">
+                <p className="command-section-label">Start with a subject</p>
+                {QUICK_STARTS.map(item => (
+                  <button key={item.href} type="button" className="command-quick-start" onClick={() => openQuickStart(item.href)}>
+                    <span className="command-result-icon"><FolderTree size={17} aria-hidden="true" /></span>
+                    <span className="command-result-copy">
+                      <span className="command-result-title">{item.label}</span>
+                      <span className="command-result-meta">{item.detail}</span>
+                    </span>
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
           <div className="command-footer"><span><kbd>↑</kbd> <kbd>↓</kbd> to navigate</span><span><kbd>Enter</kbd> to open</span><span><kbd>Esc</kbd> to close</span></div>

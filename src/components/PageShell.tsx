@@ -6,6 +6,9 @@ import { MobileMenuToggle } from '@/components/MobileMenuToggle';
 import { CommandPalette } from '@/components/CommandPalette';
 import { ReadingListLink } from '@/components/ReadingListLink';
 import { AnnotationsLink } from '@/components/AnnotationsLink';
+import { MobilePrimaryNav } from '@/components/MobilePrimaryNav';
+import { RouteTransition } from '@/components/RouteTransition';
+import { KeyboardShortcuts } from '@/components/KeyboardShortcuts';
 import type { NoteTree } from '@/types';
 
 function NoteLink({ id, title, currentId }: { id: string; title: string; currentId?: string }) {
@@ -80,6 +83,7 @@ function HeaderBar() {
       </Link>
       <Link href="/library" className="header-library-link">Catalogue</Link>
       <CommandPalette />
+      <KeyboardShortcuts />
       <ThemeToggle />
     </header>
   );
@@ -94,7 +98,8 @@ export function PageShell({ tree, currentId, children }: {
     <div className="layout" id="layout-root">
       <div className="layout-header"><HeaderBar /></div>
       <aside className="layout-sidebar" id="sidebar"><SidebarNav tree={tree} currentId={currentId} /></aside>
-      <main className="layout-main">{children}</main>
+      <main className="layout-main"><RouteTransition>{children}</RouteTransition></main>
+      <MobilePrimaryNav />
     </div>
   );
 }

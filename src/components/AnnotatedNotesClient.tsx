@@ -31,7 +31,13 @@ export function AnnotatedNotesClient({ notes }: { notes: NoteMeta[] }) {
     .map(([id, annotation]) => ({ note: notesById.get(id), annotation }))
     .filter((entry): entry is { note: NoteMeta; annotation: string } => Boolean(entry.note));
 
-  if (!ready) return <p className="reading-list-status">Loading your annotations…</p>;
+  if (!ready) {
+    return (
+      <div className="collection-loading" aria-label="Loading your annotations" aria-busy="true">
+        {[0, 1, 2].map(index => <span key={index} className="collection-loading-row" aria-hidden="true" />)}
+      </div>
+    );
+  }
 
   if (annotatedNotes.length === 0) {
     return (
@@ -39,7 +45,10 @@ export function AnnotatedNotesClient({ notes }: { notes: NoteMeta[] }) {
         <FilePenLine size={22} aria-hidden="true" />
         <h2>No annotations yet.</h2>
         <p>Open a note, write a definition, question, or revision reminder, and save it here for later.</p>
-        <Link href="/library" className="catalogue-quiet-link">Open the catalogue</Link>
+        <div className="empty-state-actions">
+          <Link href="/library" className="catalogue-quiet-link">Browse subjects</Link>
+          <Link href="/search" className="catalogue-quiet-link">Search a topic</Link>
+        </div>
       </div>
     );
   }

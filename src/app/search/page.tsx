@@ -41,6 +41,7 @@ export default async function SearchPage({ searchParams }: Props) {
         subjects={meta.subjects.filter(s => s !== 'General')}
         units={meta.units}
         tags={meta.tags}
+        subjectNoteIds={initialSubject ? notes.filter(note => note.subject === initialSubject).map(note => note.id) : []}
       />
     </PageShell>
   );
